@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.18)
-project (HDF5Examples_JAVA_H5T Java)
+project (HDF5Examples_JAVA_INTRO Java)
 
 set (CMAKE_VERBOSE_MAKEFILE 1)
 
@@ -77,7 +77,7 @@ if (H5EX_BUILD_TESTING)
         NAME ${EXAMPLE_VARNAME}_jnative-h5-${example_name}-clearall-objects
         COMMAND    ${CMAKE_COMMAND}
             -E remove
-            ${PROJECT_BINARY_DIR}/${example_name}.h5
+            ${HDFJAVA_EXAMPLES_INTRO_BINARY_DIR}/${example_name}.h5
             ${example_name}.out
             ${example_name}.out.err
     )

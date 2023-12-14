@@ -1,17 +1,11 @@
 #-----------------------------------------------------------------------------
 # Define Sources, one file per application
 #-----------------------------------------------------------------------------
-set (examples)
-
-set (common_examples
-    h5ex_g_compact
-    h5ex_g_corder
-    h5ex_g_phase
-    h5ex_g_create
+set (examples
+  ph5_f90_dataset
+  ph5_f90_file_create
+  ph5_f90_hyperslab_by_row
+  ph5_f90_hyperslab_by_col
+  ph5_f90_hyperslab_by_pattern
+  ph5_f90_hyperslab_by_chunk
 )
-
-#set (f03_examples
-#    h5ex_g_iterate_F03
-#    h5ex_g_traverse_F03
-#    h5ex_g_visit_F03
-#)

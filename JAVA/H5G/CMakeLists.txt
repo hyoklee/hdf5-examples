@@ -1,12 +1,11 @@
 cmake_minimum_required (VERSION 3.18)
-project (HDFJAVA_EXAMPLES_GROUPS Java)
+project (HDF5Examples_JAVA_GROUPS Java)
 
 set (CMAKE_VERBOSE_MAKEFILE 1)
 
-INCLUDE_DIRECTORIES (
-    ${HDFJAVA_LIB_DIR}
-    ${JAVA_INCLUDE_PATH}
-    ${JAVA_INCLUDE_PATH2}
+set_directory_properties(PROPERTIES
+    INCLUDE_DIRECTORIES 
+        "${HDFJAVA_LIB_DIR};${JAVA_INCLUDE_PATH};${JAVA_INCLUDE_PATH2}"
 )
 
 #-----------------------------------------------------------------------------
@@ -20,6 +19,9 @@ else ()
   set (CMAKE_JAVA_INCLUDE_FLAG_SEP ":")
 endif ()
 
+set (CMAKE_JAVA_INCLUDE_PATH "${HDF5_JAVA_INCLUDE_DIRS}")
+set (CMD_ARGS "-Dhdf.hdf5lib.H5.loadLibraryName=${H5EX_JAVA_LIBRARY}$<$<OR:$<CONFIG:Debug>,$<CONFIG:Developer>>:${CMAKE_DEBUG_POSTFIX}>;")
+
 set (CMAKE_JAVA_CLASSPATH ".")
 foreach (CMAKE_INCLUDE_PATH ${CMAKE_JAVA_INCLUDE_PATH})
   set (CMAKE_JAVA_CLASSPATH "${CMAKE_JAVA_CLASSPATH}${CMAKE_JAVA_INCLUDE_FLAG_SEP}${CMAKE_INCLUDE_PATH}")
@@ -32,13 +34,18 @@ endforeach ()
 
 foreach (example ${HDF_JAVA_EXAMPLES})
   get_filename_component (example_name ${example} NAME_WE)
-  file (WRITE ${PROJECT_BINARY_DIR}/Manifest.txt
+  file (WRITE ${PROJECT_BINARY_DIR}/${example_name}_Manifest.txt
   "Main-Class: ${example_name}
 Class-Path: ${HDFJAVA_CLASSJARS}
 "
   )
-  add_jar (${EXAMPLE_VARNAME}_${example_name} SOURCES ${example} MANIFEST ${PROJECT_BINARY_DIR}/Manifest.txt)
+  add_jar (${EXAMPLE_VARNAME}_${example_name}
+      SOURCES ${example}
+      MANIFEST ${PROJECT_BINARY_DIR}/${example_name}_Manifest.txt
+  )
   get_target_property (${EXAMPLE_VARNAME}_${example_name}_JAR_FILE ${EXAMPLE_VARNAME}_${example_name} JAR_FILE)
+  get_target_property (${EXAMPLE_VARNAME}_${example_name}_CLASSPATH ${EXAMPLE_VARNAME}_${example_name} CLASSDIR)
+  add_dependencies (${EXAMPLE_VARNAME}_${example_name} ${H5EX_JAVA_LIBRARIES})
 endforeach ()
 
 if (H5EX_BUILD_TESTING)
@@ -46,13 +53,13 @@ if (H5EX_BUILD_TESTING)
     add_test (
         NAME ${EXAMPLE_VARNAME}_jnative-h5-${resultfile}
         COMMAND "${CMAKE_COMMAND}"
-            -D "TEST_TESTER=${CMAKE_Java_RUNTIME}"
+            -D "TEST_TESTER=${CMAKE_Java_RUNTIME};${CMAKE_Java_RUNTIME_FLAGS}"
             -D "TEST_PROGRAM=${resultfile}"
-            -D "TEST_ARGS:STRING=${ARGN}"
+            -D "TEST_ARGS:STRING=${ARGN};${CMD_ARGS}"
             -D "TEST_CLASSPATH:STRING=${CMAKE_JAVA_CLASSPATH}${CMAKE_JAVA_INCLUDE_FLAG_SEP}${${EXAMPLE_VARNAME}_${resultfile}_JAR_FILE}"
-            -D "TEST_LIBRARY_DIRECTORY=${HDF5_JAVA_LIBRARIES}"
-            -D "TEST_FOLDER=${HDFJAVA_EXAMPLES_GROUPS_BINARY_DIR}"
-            -D "TEST_OUTPUT=${HDFJAVA_EXAMPLES_GROUPS_BINARY_DIR}/${resultfile}.out"
+            -D "TEST_LIBRARY_DIRECTORY=${CMAKE_TEST_LIB_DIRECTORY}"
+            -D "TEST_FOLDER=${PROJECT_BINARY_DIR}"
+            -D "TEST_OUTPUT=${PROJECT_BINARY_DIR}/${resultfile}.out"
             -D "TEST_REFERENCE=${resultfile}.txt"
             -D "TEST_EXPECT=${resultcode}"
             -D "TEST_SKIP_COMPARE=TRUE"
@@ -70,7 +77,7 @@ if (H5EX_BUILD_TESTING)
         NAME ${EXAMPLE_VARNAME}_jnative-h5-${example_name}-clearall-objects
         COMMAND    ${CMAKE_COMMAND}
             -E remove
-            ${HDFJAVA_EXAMPLES_GROUPS_BINARY_DIR}/${example_name}.h5
+            ${PROJECT_BINARY_DIR}/${example_name}.h5
             ${example_name}.out
             ${example_name}.out.err
     )
@@ -81,8 +88,8 @@ if (H5EX_BUILD_TESTING)
         NAME ${EXAMPLE_VARNAME}_jnative-h5-${example_name}-copy-objects
         COMMAND    ${CMAKE_COMMAND}
             -E copy_if_different
-            ${HDFJAVA_EXAMPLES_GROUPS_SOURCE_DIR}/tfiles/${H5_LIBVER_DIR}/${example_name}.txt
-            ${HDFJAVA_EXAMPLES_GROUPS_BINARY_DIR}/${example_name}.txt
+            ${PROJECT_SOURCE_DIR}/tfiles/110/${example_name}.txt
+            ${PROJECT_BINARY_DIR}/${example_name}.txt
     )
     set_tests_properties (${EXAMPLE_VARNAME}_jnative-h5-${example_name}-copy-objects PROPERTIES DEPENDS ${EXAMPLE_VARNAME}_jnative-h5-${example_name}-clearall-objects)
     set (last_test "${EXAMPLE_VARNAME}_jnative-h5-${example_name}-copy-objects")
